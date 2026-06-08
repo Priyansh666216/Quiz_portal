@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>QuizMaster Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/style.css"/>
+  <style>
+    .coding-ide {
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      background: #1e1e1e;
+      margin-top: 8px;
+    }
+    .ide-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: #2d2d2d;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .ide-lang-select {
+      background: #3a3a3a;
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #f0f0f0;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      cursor: pointer;
+      outline: none;
+      min-width: 150px;
+    }
+    .ide-run-btn {
+      background: #50fa7b;
+      color: #000;
+      border: none;
+      padding: 7px 20px;
+      border-radius: 6px;
+      font-family: var(--syne);
+      font-weight: 700;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .ide-run-btn:hover { background: #3bdb6a; }
+    .ide-reset-btn {
+      background: none;
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #888;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      font-family: var(--mono);
+      transition: all 0.2s;
+    }
+    .ide-reset-btn:hover { border-color: #f0c040; color: #f0c040; }
+    .ide-editor-wrap { width: 100%; height: 340px; }
+    .ide-bottom {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .ide-panel { padding: 14px 16px; font-family: var(--mono); font-size: 0.82rem; }
+    .ide-panel:first-child { border-right: 1px solid rgba(255,255,255,0.08); }
+    .ide-panel-label {
+      font-size: 0.65rem;
+      letter-spacing: 2px;
+      color: #555;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .ide-panel pre {
+      color: #a0a0a0;
+      white-space: pre-wrap;
+      margin: 0;
+      font-size: 0.82rem;
+      font-family: var(--mono);
+      min-height: 48px;
+    }
+    .ide-status-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: #555;
+    }
+    .ide-status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #50fa7b;
+    }
+    .sample-io {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .sio-box {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+    }
+    .sio-label {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--text3);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .sio-box pre {
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      color: var(--text2);
+      margin: 0;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-dot" id="cursorDot"></div>
+
+<!-- NOISE OVERLAY -->
+<div class="noise"></div>
+
+<!-- NAV -->
+<nav class="nav" id="nav">
+  <div class="nav-inner">
+    <div class="nav-logo" onclick="showPage('home')">
+      <span class="logo-q">Q</span><span class="logo-rest">uizMaster</span>
+      <div class="logo-dot"></div>
+    </div>
+    <div class="nav-links" id="navLinks">
+      <a class="nav-link" onclick="showPage('home')">Home</a>
+      <a class="nav-link" onclick="showPage('quizzes')">Quizzes</a>
+      <a class="nav-link" onclick="showPage('notes')" id="navNotes">Notes</a>
+      <a class="nav-link" onclick="showPage('results')" id="navResults" style="display:none">Results</a>
+      <a class="nav-link" onclick="showPage('leaderboard')">Leaderboard</a>
+    </div>
+    <div class="nav-actions">
+      <div class="nav-user" id="navUser" style="display:none">
+        <div class="user-avatar" id="userAvatar">P</div>
+        <span id="userName">User</span>
+      </div>
+      <button class="btn-logout" onclick="logout()" id="btnLogout" style="display:none">Sign Out</button>
+      <button class="btn-signin" onclick="showPage('auth')" id="btnLogin">Sign In</button>
+    </div>
+    <button class="hamburger" id="hamburger" onclick="toggleMobile()">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ════════════════════════════════════════
+     PAGE: HOME
+════════════════════════════════════════ -->
+<div id="page-home" class="page active">
+  <section class="hero">
+    <div class="hero-bg-grid"></div>
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
+    <div class="hero-inner">
+      <div class="hero-tag"><span class="tag-dot"></span>5 Categories · JWT Secured · Real-time Scoring</div>
+      <h1 class="hero-title">
+        <span class="hero-line-1">Challenge</span>
+        <span class="hero-line-2">Your <em>Mind</em></span>
+        <span class="hero-line-3">Every Day.</span>
+      </h1>
+      <p class="hero-sub">Master concepts across Science, Mathematics, History, Technology & Sports. Track progress, beat your scores, dominate the leaderboard.</p>
+      <div class="hero-cta">
+        <button class="cta-primary" onclick="showPage('quizzes')">
+          <span>Explore Quizzes</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+        <button class="cta-secondary" onclick="showPage('auth')">Create Account</button>
+      </div>
+      <div class="hero-stats">
+        <div class="hstat"><span class="hstat-num" id="statQuizzes">0</span><span class="hstat-label">Quizzes Live</span></div>
+        <div class="hstat-divider"></div>
+        <div class="hstat"><span class="hstat-num">5</span><span class="hstat-label">Categories</span></div>
+        <div class="hstat-divider"></div>
+        <div class="hstat"><span class="hstat-num">∞</span><span class="hstat-label">Knowledge</span></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="float-card fc1">
+        <div class="fc-icon">🔬</div>
+        <div class="fc-label">Science</div>
+        <div class="fc-count" id="fcScience">— quizzes</div>
+      </div>
+      <div class="float-card fc2">
+        <div class="fc-icon">💻</div>
+        <div class="fc-label">Technology</div>
+        <div class="fc-count" id="fcTech">— quizzes</div>
+      </div>
+      <div class="float-card fc3">
+        <div class="fc-icon">📐</div>
+        <div class="fc-label">Mathematics</div>
+        <div class="fc-count" id="fcMath">— quizzes</div>
+      </div>
+      <div class="float-card fc4">
+        <span class="fc-big">🏆</span>
+        <span class="fc-big-label">Leaderboard</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="cats-section">
+    <div class="section-label">QUIZ CATEGORIES</div>
+    <h2 class="section-title">Pick Your<br/><em>Battleground</em></h2>
+    <div class="cats-grid">
+      <div class="cat-tile science" onclick="goCategory('SCIENCE')">
+        <div class="cat-glow"></div>
+        <div class="cat-icon">🔬</div>
+        <h3>Science</h3>
+        <p>Physics, Chemistry, Biology & more</p>
+        <div class="cat-arrow">→</div>
+        <div class="cat-count" id="catCntScience">Loading...</div>
+      </div>
+      <div class="cat-tile math" onclick="goCategory('MATHEMATICS')">
+        <div class="cat-glow"></div>
+        <div class="cat-icon">📐</div>
+        <h3>Mathematics</h3>
+        <p>Algebra, Calculus, Statistics & more</p>
+        <div class="cat-arrow">→</div>
+        <div class="cat-count" id="catCntMath">Loading...</div>
+      </div>
+      <div class="cat-tile history" onclick="goCategory('HISTORY')">
+        <div class="cat-glow"></div>
+        <div class="cat-icon">🏛️</div>
+        <h3>History</h3>
+        <p>World events, civilizations & more</p>
+        <div class="cat-arrow">→</div>
+        <div class="cat-count" id="catCntHistory">Loading...</div>
+      </div>
+      <div class="cat-tile tech" onclick="goCategory('TECHNOLOGY')">
+        <div class="cat-glow"></div>
+        <div class="cat-icon">💻</div>
+        <h3>Technology</h3>
+        <p>CS, AI, Networking & more</p>
+        <div class="cat-arrow">→</div>
+        <div class="cat-count" id="catCntTech">Loading...</div>
+      </div>
+      <div class="cat-tile sports" onclick="goCategory('SPORTS')">
+        <div class="cat-glow"></div>
+        <div class="cat-icon">⚽</div>
+        <h3>Sports</h3>
+        <p>Cricket, Football, Olympics & more</p>
+        <div class="cat-arrow">→</div>
+        <div class="cat-count" id="catCntSports">Loading...</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="how-section">
+    <div class="section-label">HOW IT WORKS</div>
+    <h2 class="section-title">Three Steps to<br/><em>Mastery</em></h2>
+    <div class="steps-row">
+      <div class="step-card">
+        <div class="step-num">01</div>
+        <div class="step-icon">🔐</div>
+        <h3>Sign Up</h3>
+        <p>Create your free account in seconds. JWT-secured authentication keeps you safe.</p>
+      </div>
+      <div class="step-arrow">→</div>
+      <div class="step-card">
+        <div class="step-num">02</div>
+        <div class="step-icon">🎯</div>
+        <h3>Pick a Quiz</h3>
+        <p>Browse 5 categories. Filter, select, and start a timed challenge anytime.</p>
+      </div>
+      <div class="step-arrow">→</div>
+      <div class="step-card">
+        <div class="step-num">03</div>
+        <div class="step-icon">📈</div>
+        <h3>Track Progress</h3>
+        <p>Instant scoring, grade breakdown, and personal leaderboard rankings.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="notes-promo">
+    <div class="np-inner">
+      <div class="np-text">
+        <div class="section-label">NEW FEATURE</div>
+        <h2>Built-in <em>Notes</em> System</h2>
+        <p>Capture key concepts as you learn. Organize notes by category, search instantly, and review before your next quiz.</p>
+        <button class="cta-primary" onclick="showPage('notes')">Open Notes →</button>
+      </div>
+      <div class="np-visual">
+        <div class="note-preview">
+          <div class="np-header">
+            <span class="np-dot red"></span>
+            <span class="np-dot yellow"></span>
+            <span class="np-dot green"></span>
+            <span class="np-file">my_notes.md</span>
+          </div>
+          <div class="np-body">
+            <div class="np-line accent"># Science Notes</div>
+            <div class="np-line">Newton's Laws of Motion...</div>
+            <div class="np-line muted">F = ma (Second Law)</div>
+            <div class="np-line accent"># Technology</div>
+            <div class="np-line">JWT = Header.Payload.Signature</div>
+            <div class="np-line muted">Spring Security config...</div>
+            <div class="np-cursor">|</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE: AUTH
+════════════════════════════════════════ -->
+<div id="page-auth" class="page">
+  <div class="auth-split">
+    <div class="auth-left">
+      <div class="auth-left-inner">
+        <div class="al-logo" onclick="showPage('home')">← QuizMaster</div>
+        <h1>Welcome<br/><em>Back.</em></h1>
+        <p>Sign in to access your quizzes, notes and leaderboard ranking.</p>
+        <div class="al-testimonial">
+          <div class="al-quote">"QuizMaster helped me ace my semester exams. The notes feature is 🔥"</div>
+          <div class="al-author">— Priyanshu S., KIIT CSE</div>
+        </div>
+      </div>
+    </div>
+    <div class="auth-right">
+      <div class="auth-tabs">
+        <button class="atab active" id="atab-login" onclick="switchAuthTab('login')">Sign In</button>
+        <button class="atab" id="atab-register" onclick="switchAuthTab('register')">Register</button>
+      </div>
+      <div id="aform-login" class="aform">
+        <div class="fgroup">
+          <label>Username</label>
+          <div class="finput-wrap"><span class="finput-icon">@</span>
+            <input type="text" id="loginUsername" placeholder="your_username" autocomplete="username"/>
+          </div>
+        </div>
+        <div class="fgroup">
+          <label>Password</label>
+          <div class="finput-wrap"><span class="finput-icon">🔑</span>
+            <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password"/>
+          </div>
+        </div>
+        <button class="btn-auth" onclick="login()">Sign In <span>→</span></button>
+      </div>
+      <div id="aform-register" class="aform" style="display:none">
+        <div class="fgroup">
+          <label>Username</label>
+          <div class="finput-wrap"><span class="finput-icon">@</span>
+            <input type="text" id="regUsername" placeholder="choose_username"/>
+          </div>
+        </div>
+        <div class="fgroup">
+          <label>Email</label>
+          <div class="finput-wrap"><span class="finput-icon">✉</span>
+            <input type="email" id="regEmail" placeholder="you@email.com"/>
+          </div>
+        </div>
+        <div class="fgroup">
+          <label>Password</label>
+          <div class="finput-wrap"><span class="finput-icon">🔑</span>
+            <input type="password" id="regPassword" placeholder="min 6 characters"/>
+          </div>
+        </div>
+        <button class="btn-auth" onclick="register()">Create Account <span>→</span></button>
+      </div>
+      <div id="authMsg" class="auth-msg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE: QUIZZES
+════════════════════════════════════════ -->
+<div id="page-quizzes" class="page">
+  <div class="qpage-inner">
+    <div class="qpage-header">
+      <div>
+        <div class="section-label">QUIZ LIBRARY</div>
+        <h1 class="qpage-title">Find Your <em>Challenge</em></h1>
+      </div>
+      <div class="qsearch-wrap">
+        <span class="qs-icon">🔍</span>
+        <input type="text" id="quizSearch" placeholder="Search quizzes..." oninput="filterQuizzes()"/>
+      </div>
+    </div>
+    <div class="qcat-tabs" id="qcatTabs">
+      <button class="qcat-tab active" data-cat="ALL" onclick="setQCat('ALL',this)">All</button>
+      <button class="qcat-tab" data-cat="SCIENCE" onclick="setQCat('SCIENCE',this)">🔬 Science</button>
+      <button class="qcat-tab" data-cat="MATHEMATICS" onclick="setQCat('MATHEMATICS',this)">📐 Math</button>
+      <button class="qcat-tab" data-cat="HISTORY" onclick="setQCat('HISTORY',this)">🏛️ History</button>
+      <button class="qcat-tab" data-cat="TECHNOLOGY" onclick="setQCat('TECHNOLOGY',this)">💻 Technology</button>
+      <button class="qcat-tab" data-cat="SPORTS" onclick="setQCat('SPORTS',this)">⚽ Sports</button>
+    </div>
+    <div class="quiz-masonry" id="quizGrid">
+      <div class="qskeleton" id="qSkeleton">
+        <div class="skel-card"></div><div class="skel-card"></div><div class="skel-card"></div>
+        <div class="skel-card"></div><div class="skel-card"></div><div class="skel-card"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE: QUIZ ATTEMPT
+════════════════════════════════════════ -->
+<div id="page-attempt" class="page">
+  <div class="attempt-wrap">
+    <div class="attempt-sidebar">
+      <div class="asb-quiz-info">
+        <div class="asb-label">NOW PLAYING</div>
+        <h3 id="sbTitle">Quiz Title</h3>
+        <span class="asb-cat" id="sbCat">Category</span>
+      </div>
+      <div class="asb-timer">
+        <div class="timer-ring" id="timerRing">
+          <svg viewBox="0 0 100 100">
+            <circle class="ring-bg" cx="50" cy="50" r="42"/>
+            <circle class="ring-fill" id="ringFill" cx="50" cy="50" r="42"/>
+          </svg>
+          <div class="timer-inner">
+            <span id="timerDisplay">30:00</span>
+            <small>remaining</small>
+          </div>
+        </div>
+      </div>
+      <div class="asb-progress-info">
+        <div class="asb-prog-label">Progress</div>
+        <div class="asb-prog-bar"><div class="asb-prog-fill" id="asbProgFill"></div></div>
+        <div class="asb-prog-nums"><span id="qDone">0</span> of <span id="qTotalSb">0</span> answered</div>
+      </div>
+      <div class="asb-qmap" id="qMap"></div>
+      <button class="btn-submit-quiz" onclick="submitQuiz()">Submit Quiz ✓</button>
+    </div>
+    <div class="attempt-main">
+      <div class="aq-header">
+        <span class="aq-num">Question <span id="qCurrent">1</span>/<span id="qTotal">0</span></span>
+        <span class="aq-marks" id="aqMarks">1 mark</span>
+      </div>
+      <div class="aq-body" id="questionArea">
+        <div class="loading-q">Loading question...</div>
+      </div>
+      <div class="aq-nav">
+        <button class="btn-aqnav" id="btnPrev" onclick="prevQuestion()">← Previous</button>
+        <div class="aq-dots" id="aqDots"></div>
+        <button class="btn-aqnav accent" id="btnNext" onclick="nextQuestion()">Next →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE: RESULT
+════════════════════════════════════════ -->
+<div id="page-result" class="page">
+  <div class="result-page">
+    <div class="result-confetti" id="confetti"></div>
+    <div class="result-card">
+      <div class="rc-grade-wrap">
+        <div class="rc-grade" id="rcGrade">A+</div>
+        <div class="rc-grade-ring"></div>
+      </div>
+      <h2 id="rcTitle">Outstanding!</h2>
+      <p id="rcSubtitle" class="rc-subtitle">Quiz Title</p>
+      <div class="rc-stats">
+        <div class="rcs"><div class="rcs-val" id="rcScore">0/0</div><div class="rcs-label">Score</div></div>
+        <div class="rcs"><div class="rcs-val" id="rcCorrect">0/0</div><div class="rcs-label">Correct</div></div>
+        <div class="rcs"><div class="rcs-val" id="rcPercent">0%</div><div class="rcs-label">Accuracy</div></div>
+        <div class="rcs"><div class="rcs-val" id="rcTime">—</div><div class="rcs-label">Time Taken</div></div>
+      </div>
+      <div class="rc-bar-wrap">
+        <div class="rc-bar-track"><div class="rc-bar-fill" id="rcBarFill"></div></div>
+        <div class="rc-bar-labels"><span>0%</span><span>Pass (50%)</span><span>100%</span></div>
+      </div>
+      <div class="rc-actions">
+        <button class="cta-primary" onclick="showPage('quizzes')">Try Another Quiz</button>
+        <button class="cta-secondary" onclick="showPage('results')">View History</button>
+        <button class="cta-secondary" onclick="showPage('notes')">Add Notes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE: MY RESULTS
+════════════════════════════════════════ -->
+<div id="page-results" class="page">
+  <div class="rpage-inner">
+    <div class="section-label">PERFORMANCE HISTORY</div>
+    <h1 class="qpage-title">My <em>Results</em></h1>
+    <div class="rpage-summary" id="rpageSummary"></div>
+    <div class="results-table-wrap">
+      <div class="rt-header">
+        <span>Quiz</span><span>Category</span><span>Score</span><span>Grade</span><span>Date</span>
+      </div>
+      <div id="resultsList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE: NOTES
+════════════════════════════════════════ -->
+<div id="page-notes" class="page">
+  <div class="cs-notes-page">
+    <div class="cs-notes-home" id="csNotesHome">
+      <div class="qpage-header">
+        <div>
+          <div class="section-label">CORE CS NOTES</div>
+          <h1 class="qpage-title">Choose a <em>Subject</em></h1>
+        </div>
+        <div class="qsearch-wrap">
+          <span class="qs-icon">🔍</span>
+          <input type="text" id="subjectSearch" placeholder="Search subjects..." oninput="renderSubjectCovers()"/>
+        </div>
+      </div>
+      <div class="subject-grid" id="subjectGrid"></div>
+    </div>
+    <div class="subject-workspace" id="subjectWorkspace" style="display:none">
+      <aside class="subject-rail">
+        <button class="back-subjects" onclick="showSubjectLibrary()">← Subjects</button>
+        <div class="subject-mini-list" id="subjectMiniList"></div>
+      </aside>
+      <main class="subject-editor">
+        <div class="subject-editor-head">
+          <div>
+            <div class="section-label" id="activeSubjectCode">SUBJECT</div>
+            <h1 class="qpage-title" id="activeSubjectTitle">Notes</h1>
+          </div>
+          <label class="pdf-upload-btn">
+            Upload PDF
+            <input type="file" id="subjectPdfInput" accept="application/pdf" onchange="uploadSubjectPdf(event)" hidden>
+          </label>
+        </div>
+        <div class="subject-content-grid">
+          <section class="pdf-panel">
+            <div class="panel-head">
+              <span>PDF Notes</span>
+              <button class="panel-link" id="removePdfBtn" onclick="removeSubjectPdf()" style="display:none">Remove</button>
+            </div>
+            <div class="pdf-empty" id="pdfEmpty">
+              <strong>No PDF uploaded</strong>
+              <span>Upload your class notes or books for this subject.</span>
+            </div>
+            <iframe id="pdfViewer" class="pdf-viewer" title="Subject PDF" style="display:none"></iframe>
+          </section>
+          <section class="written-panel">
+            <div class="panel-head">
+              <span>My Written Notes</span>
+              <button class="panel-link" onclick="saveSubjectNote()">Save</button>
+            </div>
+            <textarea id="subjectNoteInput" class="subject-note-input" placeholder="Write your own notes for this subject..."></textarea>
+            <div class="ne-footer">
+              <span id="subjectWordCount">0 words</span>
+              <span id="subjectLastSaved">Not saved</span>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE: LEADERBOARD
+════════════════════════════════════════ -->
+<div id="page-leaderboard" class="page">
+  <div class="lb-inner">
+    <div class="section-label">GLOBAL RANKINGS</div>
+    <h1 class="qpage-title">Leader<em>board</em></h1>
+    <div class="lb-podium" id="lbPodium"></div>
+    <div class="lb-table-wrap">
+      <div class="lbt-header">
+        <span>Rank</span><span>Player</span><span>Quizzes</span><span>Best Score</span><span>Avg</span>
+      </div>
+      <div id="lbTable"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE: ADMIN
+════════════════════════════════════════ -->
+<div id="page-admin" class="page">
+  <div class="admin-inner">
+    <div class="section-label">ADMIN PANEL</div>
+    <h1 class="qpage-title">Manage <em>Content</em></h1>
+    <div class="admin-tabs">
+      <button class="adtab active" onclick="switchAdminTab('quizzes',this)">📚 Quizzes</button>
+      <button class="adtab" onclick="switchAdminTab('questions',this)">❓ Questions</button>
+      <button class="adtab" onclick="switchAdminTab('upload',this)">⬆ Upload</button>
+    </div>
+
+    <div id="adpanel-quizzes">
+      <div class="ad-form-card">
+        <h3>Create New Quiz</h3>
+        <div class="ad-form-grid">
+          <div class="fgroup"><label>Title</label>
+            <div class="finput-wrap"><input type="text" id="adminQuizTitle" placeholder="Quiz title"/></div>
+          </div>
+          <div class="fgroup"><label>Category</label>
+            <select id="adminQuizCategory" class="fselect">
+              <option value="SCIENCE">🔬 Science</option>
+              <option value="MATHEMATICS">📐 Mathematics</option>
+              <option value="HISTORY">🏛️ History</option>
+              <option value="TECHNOLOGY">💻 Technology</option>
+              <option value="SPORTS">⚽ Sports</option>
+            </select>
+          </div>
+          <div class="fgroup"><label>Time Limit (min)</label>
+            <div class="finput-wrap"><input type="number" id="adminQuizTime" value="30" min="5"/></div>
+          </div>
+        </div>
+        <div class="fgroup"><label>Description</label>
+          <textarea id="adminQuizDesc" rows="2" placeholder="Optional description..." class="ftextarea"></textarea>
+        </div>
+        <button class="btn-auth" onclick="createQuiz()">+ Create Quiz</button>
+      </div>
+      <h3 class="ad-list-title">Existing Quizzes</h3>
+      <div id="adminQuizList" class="ad-quiz-list"></div>
+    </div>
+
+    <div id="adpanel-questions" style="display:none">
+      <div class="ad-form-card">
+        <h3>Add Question</h3>
+        <div class="ad-form-grid">
+          <div class="fgroup"><label>Select Quiz</label>
+            <select id="adminQQuiz" class="fselect"><option value="">— Select a quiz —</option></select>
+          </div>
+          <div class="fgroup"><label>Question Type</label>
+            <select id="adminQType" class="fselect" onchange="toggleQuestionTypeFields()">
+              <option value="MCQ">MCQ</option>
+              <option value="CODING">Coding</option>
+            </select>
+          </div>
+          <div class="fgroup"><label>Marks</label>
+            <div class="finput-wrap"><input type="number" id="adminQMarks" value="1" min="1"/></div>
+          </div>
+        </div>
+        <div class="fgroup"><label>Question Text</label>
+          <textarea id="adminQText" rows="3" placeholder="Enter the question..." class="ftextarea"></textarea>
+        </div>
+        <div id="mcqFields">
+          <div class="ad-options-grid">
+            <div class="fgroup"><label>Option A</label><div class="finput-wrap opt-a"><span class="opt-badge">A</span><input type="text" id="adminQA"/></div></div>
+            <div class="fgroup"><label>Option B</label><div class="finput-wrap opt-b"><span class="opt-badge">B</span><input type="text" id="adminQB"/></div></div>
+            <div class="fgroup"><label>Option C</label><div class="finput-wrap opt-c"><span class="opt-badge">C</span><input type="text" id="adminQC"/></div></div>
+            <div class="fgroup"><label>Option D</label><div class="finput-wrap opt-d"><span class="opt-badge">D</span><input type="text" id="adminQD"/></div></div>
+          </div>
+          <div class="fgroup"><label>Correct Answer</label>
+            <select id="adminQCorrect" class="fselect">
+              <option value="A">A</option><option value="B">B</option>
+              <option value="C">C</option><option value="D">D</option>
+            </select>
+          </div>
+        </div>
+        <div id="codingFields" style="display:none">
+          <div class="fgroup"><label>Starter Code</label>
+            <textarea id="adminStarterCode" rows="6"
+              placeholder="function solve(input) {&#10;  // write code here&#10;}"
+              class="ftextarea code-box"></textarea>
+          </div>
+          <div class="ad-form-grid">
+            <div class="fgroup"><label>Sample Input</label>
+              <textarea id="adminSampleInput" rows="3" placeholder="5" class="ftextarea code-box"></textarea>
+            </div>
+            <div class="fgroup"><label>Expected Output / Keyword</label>
+              <textarea id="adminExpectedOutput" rows="3" placeholder="120" class="ftextarea code-box"></textarea>
+            </div>
+          </div>
+          <div class="fgroup"><label>Explanation</label>
+            <textarea id="adminCodingExplanation" rows="2" placeholder="Optional solution note..." class="ftextarea"></textarea>
+          </div>
+        </div>
+        <button class="btn-auth" onclick="addQuestion()">+ Add Question</button>
+        <div id="adminQMsg" class="auth-msg" style="margin-top:12px"></div>
+      </div>
+    </div>
+
+    <div id="adpanel-upload" style="display:none">
+      <div class="ad-form-card">
+        <h3>Upload Questions JSON</h3>
+        <p class="admin-help">Upload an array of questions. Each needs quizId, type, questionText, marks and MCQ options or coding fields.</p>
+        <label class="question-upload">
+          Choose JSON File
+          <input type="file" id="questionJsonInput" accept="application/json" onchange="uploadQuestionsJson(event)" hidden>
+        </label>
+        <pre class="json-example">[
+  {
+    "quizId": 1,
+    "type": "CODING",
+    "questionText": "Reverse a string.",
+    "starterCode": "function reverse(s) {\n  // code\n}",
+    "expectedOutput": "olleh",
+    "marks": 2
+  }
+]</pre>
+        <div id="uploadQMsg" class="auth-msg" style="margin-top:12px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-stack" id="toastStack"></div>
+
+<!-- Monaco Editor — load BEFORE app.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+<script>
+  // Configure Monaco paths
+  require.config({
+    paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }
+  });
+
+  // Load Monaco and define theme
+  window.monacoReady = false;
+  require(['vs/editor/editor.main'], function () {
+    monaco.editor.defineTheme('quizmaster-dark', {
+      base: 'vs-dark',
+      inherit: true,
+      rules: [
+        { token: 'keyword',  foreground: 'f0c040', fontStyle: 'bold' },
+        { token: 'string',   foreground: '50fa7b' },
+        { token: 'number',   foreground: '6fb3ff' },
+        { token: 'comment',  foreground: '585858', fontStyle: 'italic' },
+        { token: 'type',     foreground: 'c084fc' },
+        { token: 'function', foreground: 'f0f0f0' },
+      ],
+      colors: {
+        'editor.background':               '#1e1e1e',
+        'editor.foreground':               '#f0f0f0',
+        'editor.lineHighlightBackground':  '#2a2a2a',
+        'editorLineNumber.foreground':     '#444444',
+        'editor.selectionBackground':      'rgba(240,192,64,0.22)',
+        'editorCursor.foreground':         '#f0c040',
+        'editorIndentGuide.background':    '#2a2a2a',
+        'editorBracketMatch.background':   'rgba(240,192,64,0.15)',
+      }
+    });
+    window.monacoReady = true;
+  });
+</script>
+
+<!-- App JS — loads after Monaco is configured -->
+<script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,201 @@
+{
+  "info": {
+    "name": "Online Quiz App - Priyanshu Shukla",
+    "description": "12 REST APIs for the Online Quiz Application",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "BASE_URL", "value": "http://localhost:8080/api" },
+    { "key": "TOKEN", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "API 1 - Register",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Content-Type","value":"application/json"}],
+            "url": "{{BASE_URL}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"username\":\"priyanshu\",\"email\":\"priyanshu@example.com\",\"password\":\"pass123\"}"
+            }
+          }
+        },
+        {
+          "name": "API 2 - Login",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Content-Type","value":"application/json"}],
+            "url": "{{BASE_URL}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"username\":\"priyanshu\",\"password\":\"pass123\"}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Quizzes",
+      "item": [
+        {
+          "name": "API 3 - Create Quiz (ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key":"Content-Type","value":"application/json"},
+              {"key":"Authorization","value":"Bearer {{TOKEN}}"}
+            ],
+            "url": "{{BASE_URL}}/quizzes/create",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\":\"Java Basics\",\"description\":\"Test your Java knowledge\",\"category\":\"TECHNOLOGY\",\"timeLimitMinutes\":30}"
+            }
+          }
+        },
+        {
+          "name": "API 4 - Get All Quizzes",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/quizzes/all"
+          }
+        },
+        {
+          "name": "API 5 - Get Quiz By ID",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/quizzes/1"
+          }
+        },
+        {
+          "name": "API 6 - Get By Category",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/quizzes/category/TECHNOLOGY"
+          }
+        },
+        {
+          "name": "API 7 - Update Quiz (ADMIN)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key":"Content-Type","value":"application/json"},
+              {"key":"Authorization","value":"Bearer {{TOKEN}}"}
+            ],
+            "url": "{{BASE_URL}}/quizzes/update/1",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\":\"Advanced Java\",\"category\":\"TECHNOLOGY\",\"timeLimitMinutes\":45}"
+            }
+          }
+        },
+        {
+          "name": "API 8 - Delete Quiz (ADMIN)",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key":"Authorization","value":"Bearer {{TOKEN}}"}],
+            "url": "{{BASE_URL}}/quizzes/delete/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Questions",
+      "item": [
+        {
+          "name": "API 9 - Add Question (ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key":"Content-Type","value":"application/json"},
+              {"key":"Authorization","value":"Bearer {{TOKEN}}"}
+            ],
+            "url": "{{BASE_URL}}/questions/add",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"questionText\":\"What is JVM?\",\"optionA\":\"Java Virtual Machine\",\"optionB\":\"Java Variable Method\",\"optionC\":\"Just a VM\",\"optionD\":\"None\",\"correctAnswer\":\"A\",\"marks\":1,\"quizId\":1}"
+            }
+          }
+        },
+        {
+          "name": "API 10 - Get Questions by Quiz",
+          "request": {
+            "method": "GET",
+            "header": [{"key":"Authorization","value":"Bearer {{TOKEN}}"}],
+            "url": "{{BASE_URL}}/questions/quiz/1"
+          }
+        },
+        {
+          "name": "API 11 - Update Question (ADMIN)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key":"Content-Type","value":"application/json"},
+              {"key":"Authorization","value":"Bearer {{TOKEN}}"}
+            ],
+            "url": "{{BASE_URL}}/questions/update/1",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"questionText\":\"Updated question?\",\"optionA\":\"A\",\"optionB\":\"B\",\"optionC\":\"C\",\"optionD\":\"D\",\"correctAnswer\":\"B\",\"marks\":2,\"quizId\":1}"
+            }
+          }
+        },
+        {
+          "name": "API 12 - Delete Question (ADMIN)",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key":"Authorization","value":"Bearer {{TOKEN}}"}],
+            "url": "{{BASE_URL}}/questions/delete/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Results",
+      "item": [
+        {
+          "name": "Submit Quiz",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key":"Content-Type","value":"application/json"},
+              {"key":"Authorization","value":"Bearer {{TOKEN}}"}
+            ],
+            "url": "{{BASE_URL}}/results/submit",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"quizId\":1,\"answers\":{\"1\":\"A\",\"2\":\"B\",\"3\":\"C\"}}"
+            }
+          }
+        },
+        {
+          "name": "Get My Results",
+          "request": {
+            "method": "GET",
+            "header": [{"key":"Authorization","value":"Bearer {{TOKEN}}"}],
+            "url": "{{BASE_URL}}/results/my"
+          }
+        },
+        {
+          "name": "Get Result By ID",
+          "request": {
+            "method": "GET",
+            "header": [{"key":"Authorization","value":"Bearer {{TOKEN}}"}],
+            "url": "{{BASE_URL}}/results/1"
+          }
+        },
+        {
+          "name": "Get Results by Quiz (ADMIN)",
+          "request": {
+            "method": "GET",
+            "header": [{"key":"Authorization","value":"Bearer {{TOKEN}}"}],
+            "url": "{{BASE_URL}}/results/quiz/1"
+          }
+        }
+      ]
+    }
+  ]
+}
