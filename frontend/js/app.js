@@ -2,7 +2,7 @@
    QuizMaster Pro — app.js
    ============================================================ */
 
-const BASE = 'http://localhost:8080/api';
+const BASE = 'https://quiz-backend-dtlz.onrender.com/api';
 
 // ─── STATE ────────────────────────────────────────────────────
 let token            = localStorage.getItem('qmToken') || null;
