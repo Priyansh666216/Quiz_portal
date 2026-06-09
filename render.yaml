@@ -1,16 +1,9 @@
-# render.yaml — Deploy QuizMaster Code Runner to Render
-# Place this file in the ROOT of your repo (not inside code-runner/)
-# Render will auto-detect it and configure the service
-
 services:
   - type: web
     name: quizmaster-code-runner
-    runtime: node
+    runtime: docker
     rootDir: code-runner
-    buildCommand: npm install
-    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
-    # Free tier — note: will sleep after 15min inactivity (cold start ~30s)
     plan: free
