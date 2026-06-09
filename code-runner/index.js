@@ -8,6 +8,12 @@ const cors     = require('cors');
 const { exec } = require('child_process');
 const fs       = require('fs');
 const crypto   = require('crypto');
+try {
+  execSync('javac -version', { stdio: 'ignore' });
+} catch {
+  console.log('Installing Java...');
+  execSync('apt-get update -qq && apt-get install -y -qq default-jdk', { stdio: 'inherit' });
+}
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
