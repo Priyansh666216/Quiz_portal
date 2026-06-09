@@ -3,6 +3,7 @@
    ============================================================ */
 
 const BASE = 'https://quiz-backend-dtlz.onrender.com/api';
+const CODE_RUNNER_URL = 'https://quizmaster-code-runner.onrender.com';
 
 // ─── STATE ────────────────────────────────────────────────────
 let token            = localStorage.getItem('qmToken') || null;
@@ -669,7 +670,7 @@ async function runCode(questionId, expectedOutput) {
   }
 
   try {
-    const res = await fetch('http://localhost:3000/api/execute', {
+   const res = await fetch(CODE_RUNNER_URL + '/api/execute', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
